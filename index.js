@@ -1,82 +1,63 @@
-let userForm = document.getElementById("user_form");
-let userEntries=[];
-if(localStorage.getItem("userEntries")===null)
-{
-    userEntries =[];
-}
-else{
-   userEntries = JSON.parse(localStorage.getItem("userEntries")); 
+// Get user entries from local storage or initialize an empty array
+let userEntries = JSON.parse(localStorage.getItem("userEntries")) || [];
+
+// Function to retrieve entries
+const retrieveEntries = () => {
+    return JSON.parse(localStorage.getItem('userEntries')) || [];
 }
 
-let errors=[]
-const retieveEntries = ()=>{
-    let entries = localStorage.getItem('userEntries')
-    if(entries){
-        entries=JSON.parse(entries)
-    }else{
-        entries=[]
+// Function to display entries
+const displayEntries = () => {
+    let entries = retrieveEntries();
+    let tableEntries = entries.map(entry => {
+        return `<tr>${Object.values(entry).map(val => `<td class='border px-4 py-2'>${val}</td>`).join('')}</tr>`;
+    }).join('\n');
+    document.getElementById('user-entries').innerHTML = `
+        <table class='table-auto w-full'>
+            <tr>
+                <th class='px-4 py-2 '>Name </th>
+                <th class='px-4 py-2 '>Email </th>
+                <th class='px-4 py-2 '>Password </th>
+                <th class='px-4 py-2 '>Dob </th>
+                <th class='px-4 py-2 '>Accepted terms? </th>
+            </tr>
+            ${tableEntries}
+        </table>`;
+}
+
+// Function to calculate age from date of birth
+const calculateAge = dob => {
+    let birthYear = new Date(dob).getFullYear();
+    let currentYear = new Date().getFullYear();
+    return currentYear - birthYear;
+}
+
+// Function to save user form
+const saveUserForm = event => {
+    event.preventDefault();
+    let dob = document.getElementById('dob').value;
+    let age = calculateAge(dob);
+    if (age < 18 || age > 55) {
+        alert("Age must be between 18 and 55");
+        document.getElementById('dob').style = 'border:1px solid red';
+    } else {
+        document.getElementById('dob').style = 'border:none';
+        let entry = {
+            Name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            dob: dob,
+            acceptTerms: document.getElementById('acceptTerms').checked
+        };
+        userEntries.push(entry);
+        localStorage.setItem("userEntries", JSON.stringify(userEntries));
+        displayEntries();
+        document.getElementById("user_form").reset();
     }
-    return entries
-}
-const displayEntries = ()=>{
-let entries=retieveEntries()
-const tableEntries = entries.map((entry)=>{
-const nameCell = `<td class='border px-4 py-2'>${entry.Name}</td>`
-const emailCell = `<td class='border px-4 py-2'>${entry.email}</td>`
-const passwordCell = `<td class='border px-4 py-2'>${entry.password}</td>`
-const dobCell = `<td class='border px-4 py-2'>${entry.dob}</td>`
-const acceptTermsCell = `<td class='border px-4 py-2'>${entry.acceptTerms}</td>`
-const row = `<tr>${nameCell} ${emailCell} ${passwordCell} ${dobCell} ${acceptTermsCell}</tr>`
-return row
-
-}).join('\n')
-const table =` <table class='table-auto w-full'>
-    <tr>
-    <th class='px-4 py-2 '>Name </th>
-    <th class='px-4 py-2 '>Email </th>
-    <th class='px-4 py-2 '>Password </th>
-    <th class='px-4 py-2 '>Dob </th>
-    <th class='px-4 py-2 '>Accepted terms? </th>
-    </tr>${tableEntries}
-</table>`
-let details = document.getElementById('user-entries')
-details.innerHTML=table
 }
 
-const saveUserForm = (event)=>{
-event.preventDefault();
-const Name = document.getElementById('name').value
-const email = document.getElementById('email').value
-const password = document.getElementById('password').value
-const dob = document.getElementById('dob').value
-const acceptTerms = document.getElementById('acceptTerms').checked
-var currentYear = new Date().getFullYear();
-var birthYear = dob.split("-");
-let year=birthYear[0]
-var age = currentYear-year
-console.log({age,currentYear,birthYear})
-if(age < 18 || age > 55){
-    document.getElementById('dob').style='border:1px solid red'
-  return  alert("Age must be between 18 and 55")
+// Event listener for form submission
+document.getElementById("user_form").addEventListener('submit', saveUserForm);
 
-}else{
-    document.getElementById('dob').style='border:none'
-
-    const entry ={
-        Name,
-        email,
-        password,
-        dob,
-        acceptTerms
-     }
-     userEntries.push(entry);
-     localStorage.setItem("userEntries",JSON.stringify(userEntries))
-    displayEntries()
-    userForm.reset()
-   
-}
- 
-}
-userForm.addEventListener('submit',saveUserForm)
-displayEntries()
-
+// Display entries on page load
+displayEntries();
